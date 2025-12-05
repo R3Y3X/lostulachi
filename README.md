@@ -1,135 +1,154 @@
-# 🎬 Sistema de Análisis de Video y Reconocimiento Facial
 
-Proyecto completo que combina análisis de video multimodal con Google Gemini y reconocimiento facial en tiempo real.
+# Sistema Integral de Reconocimiento Facial y Análisis de Video con IA
 
-## 📁 Estructura del Proyecto
+Este repositorio contiene una suite de herramientas de visión por computadora e inteligencia artificial, dividida en dos grandes áreas: un **Analizador de Video Multimodal** potenciado por Google Gemini y un **Sistema de Reconocimiento Facial Dual** con dos enfoques de implementación distintos.
 
-```
-prueba_gemini/
-├── video_analysis/          # 🎬 Análisis de video con Gemini
-│   ├── app.py              # Aplicación Streamlit principal
-│   └── README.md           # Documentación del módulo
-│
-├── face_recognition/        # 👤 Sistema de reconocimiento facial
-│   ├── README.md           # Documentación del módulo
-│   └── (scripts a implementar)
-│
-├── shared/                  # 🔧 Utilidades compartidas
-│   └── utils/
-│       ├── config_loader.py # Carga de configuración
-│       └── __init__.py
-│
-├── config/                  # ⚙️ Configuración
-│   ├── config.example.py   # Ejemplo de configuración
-│   └── __init__.py
-│
-├── data/                    # 💾 Datos del proyecto
-│   ├── models/             # Modelos de ML
-│   ├── images/             # Imágenes de personas
-│   └── database/           # Bases de datos
-│
-├── requirements.txt        # Dependencias del proyecto
-├── README.md              # Este archivo
-└── .env                   # Variables de entorno (crear manualmente)
-```
+---
 
-## 🚀 Inicio Rápido
+## Estructura del Proyecto
 
-### 1. Instalación
+El proyecto se organiza en tres módulos principales:
+
+```text
+├── video_analysis/          # Módulo 1: Análisis de video con Gemini Pro
+├── Face_recognition_dati/   # Módulo 2 (Variación A): Sistema de Vigilancia y Captura
+└── face_recognition/        # Módulo 2 (Variación B): Sistema de Verificación y Testing
+````
+
+---
+
+## Módulo de Reconocimiento Facial (Dos Variaciones)
+
+El proyecto implementa **dos estrategias diferentes** para el reconocimiento facial, ubicadas en carpetas separadas. Ambas utilizan la librería **DeepFace** como motor y **OpenCV** para el procesamiento de imágenes, pero tienen propósitos distintos.
+
+### Variación A: Sistema de Vigilancia y Captura (`Face_recognition_dati`)
+
+**Ubicación:** `Face_recognition_dati/facial_recognition_realtime.py`
+
+Esta variación está diseñada como un **sistema de seguridad o monitoreo en tiempo real**. Su objetivo es identificar personas conocidas y registrar automáticamente a los intrusos.
+
+**Lógica de funcionamiento:**
+
+1. Carga de base de datos: Lee las imágenes de la carpeta `known_faces/`.
+2. Detección en vivo: Analiza el flujo de la webcam.
+3. Clasificación:
+
+   * Conocido (ROJO): Si el rostro coincide con la base de datos, dibuja un recuadro rojo y muestra el nombre.
+   * Desconocido (AMARILLO/VERDE): Si el rostro no coincide, lo marca como desconocido.
+4. Captura automática: Si detecta un desconocido, toma una foto automáticamente y la guarda en `known_faces` con un timestamp.
+5. Cooldown: Sistema de enfriamiento (5 segundos) para evitar guardar múltiples fotos seguidas de la misma persona.
+6. Optimización: Utiliza *threading* para que el reconocimiento (proceso pesado) no congele la imagen de la cámara.
+
+**Uso ideal:** Control de acceso, registro de visitas, seguridad doméstica.
+
+---
+
+### Variación B: Sistema de Verificación y Testing (`face_recognition`)
+
+**Ubicación:** `face_recognition/` (Scripts: `main.py`, `webcam_match.py`)
+
+Esta variación funciona como **laboratorio de pruebas y verificación**. Compara conjuntos de datos (Train vs Test) para medir precisión del modelo y permite emparejamiento en vivo sin la lógica de guardado automático.
+
+**Componentes:**
+
+* **`main.py` (Comparador Estático):** Compara imágenes en `test/` contra `train/`. Genera un reporte en consola indicando coincidencias y porcentaje de similitud.
+* **`webcam_match.py` (Verificador en Vivo):** Abre la cámara y busca coincidencias contra la carpeta `train/`. Muestra porcentaje de similitud en tiempo real.
+* **Base de datos estructurada:** Usa carpetas separadas con nombres específicos (`josefina_1.png`, `luis_4.png`, etc.).
+
+**Uso ideal:** Evaluar modelos (VGG-Face, Facenet), pruebas de concepto, demos de similitud.
+
+---
+
+## Módulo de Análisis de Video (`video_analysis`)
+
+**Ubicación:** `video_analysis/app.py`
+
+Aplicación web construida con **Streamlit**, utilizando la API de **Google Gemini 2.5 Pro** para analizar videos de forma multimodal.
+
+**Características:**
+
+* Subida de archivos de video (MP4, MOV, AVI).
+* Prompting en lenguaje natural.
+* Extracción de frames: La IA devuelve el *timestamp* de la acción y la app extrae y muestra la imagen correspondiente.
+
+---
+
+## ¿Cómo funciona la detección por similitud?
+
+Ambos sistemas usan **Embeddings Vectoriales**:
+
+1. **Detección:** Se localiza una cara en la imagen.
+2. **Vectorización:** La red neuronal (VGG-Face o Facenet) genera un vector (embedding) que representa los rasgos únicos de la persona.
+3. **Comparación (Distancia del Coseno):**
+
+   * Valores cercanos a 0 → misma persona.
+   * Valores cercanos a 1 → personas distintas.
+   * Se utiliza un **umbral (threshold)** (ej. 0.40) para decidir si hay coincidencia.
+
+---
+
+## Instalación y Uso
+
+### Prerrequisitos
+
+* Python 3.10 o superior.
+* Webcam funcional.
+* API Key de Google (para el módulo de video).
+
+### 1. Instalación de dependencias
 
 ```bash
-# Crear entorno virtual (recomendado)
 python -m venv venv
-source venv/bin/activate  # En Windows: venv\Scripts\activate
+source venv/bin/activate      # Windows: .\venv\Scripts\activate
 
-# Instalar dependencias
 pip install -r requirements.txt
 ```
 
-### 2. Configuración
+*Nota: Puede ser necesario instalar `tf-keras` según la versión de TensorFlow.*
 
-Crea un archivo `.env` en la raíz del proyecto:
+### 2. Ejecutar Variación A (Vigilancia)
 
+```bash
+cd Face_recognition_dati
+python facial_recognition_realtime.py
 ```
-GEMINI_API_KEY=tu_clave_api_aqui
+
+*Debe existir la carpeta `known_faces` con al menos una foto.*
+
+### 3. Ejecutar Variación B (Testing)
+
+```bash
+cd face_recognition
+
+# Prueba con webcam
+python webcam_match.py --train_dir train
+
+# Comparar carpetas
+python main.py --train_dir train --test_dir test
 ```
 
-### 3. Ejecutar Aplicaciones
-
-#### Análisis de Video (Streamlit)
+### 4. Ejecutar Análisis de Video
 
 ```bash
 streamlit run video_analysis/app.py
 ```
 
-#### Reconocimiento Facial
+---
 
-```bash
-# (Próximamente)
-python face_recognition/main.py
-```
+## Tecnologías Utilizadas
 
-## 📦 Módulos
-
-### 🎬 Video Analysis (`video_analysis/`)
-
-Aplicación web para análisis de video usando Google Gemini 2.5 Pro:
-- Carga de videos
-- Análisis multimodal con IA
-- Extracción de frames en timestamps específicos
-- Interfaz web con Streamlit
-
-**Ver más:** [video_analysis/README.md](video_analysis/README.md)
-
-### 👤 Face Recognition (`face_recognition/`)
-
-Sistema de reconocimiento facial (en desarrollo):
-- Registro de personas en base de datos
-- Detección en tiempo real desde cámara
-- Marcado visual: rojo para target, verde para no-target
-
-**Ver más:** [face_recognition/README.md](face_recognition/README.md)
-
-## 🛠️ Tecnologías
-
-- **Python 3.10+**
-- **Streamlit**: Interfaz web
-- **Google Gemini 2.5 Pro**: Análisis multimodal
-- **OpenCV**: Procesamiento de video e imágenes
-- **python-dotenv**: Manejo de variables de entorno
-
-## 📋 Requisitos Previos
-
-- Python 3.10 o superior
-- Cuenta de Google AI Studio con API Key
-- Cámara web (para reconocimiento facial)
-
-## 🔑 Obtener API Key de Google AI Studio
-
-1. Ve a [Google AI Studio](https://ai.google.dev/)
-2. Inicia sesión con tu cuenta de Google
-3. Genera una nueva API Key
-4. Agrega la clave al archivo `.env`:
-
-```
-GEMINI_API_KEY=tu_clave_aqui
-```
-
-## 📝 Notas
-
-- El archivo `.env` no debe subirse a repositorios públicos
-- Los videos se procesan temporalmente durante el análisis
-- La base de datos de reconocimiento facial se almacena en `data/database/`
-
-## 🤝 Contribuciones
-
-Las contribuciones son bienvenidas. Por favor:
-1. Fork el proyecto
-2. Crea una rama para tu feature
-3. Commit tus cambios
-4. Push a la rama
-5. Abre un Pull Request
+* DeepFace: Framework de reconocimiento facial.
+* OpenCV (cv2): Procesamiento de imagen y captura de cámara.
+* Google Gemini API: Procesamiento multimodal de video.
+* Streamlit: Interfaz web.
+* TensorFlow/Keras: Backend de deep learning.
 
 ---
 
-**Desarrollado con ❤️ usando Google Gemini, Streamlit y OpenCV**
+**Autor:** Lostulachi Team
+**Licencia:** MIT
+
+```
+
+Si quieres que genere también una versión **aún más minimalista**, **con tabla de contenidos**, o **con enlaces automáticos**, puedo hacerlo.
+```
